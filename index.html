@@ -96,6 +96,27 @@
                 </header>
                 <div class="panel__content" id="componentsContainer"></div>
             </section>
+
+            <section class="card panel">
+                <header class="panel__header">
+                    <span class="material-symbols-outlined">palette</span>
+                    <span>Page Styling</span>
+                </header>
+                <div class="panel__content page-style-controls">
+                    <label for="pageBackgroundColor" class="muted small">Page background</label>
+                    <input type="color" id="pageBackgroundColor" value="#ffffff">
+                    <div class="style-actions">
+                        <button class="btn-flat waves-effect" id="applyPageBackgroundBtn">
+                            <span class="material-symbols-outlined">check</span>
+                            Apply
+                        </button>
+                        <button class="btn-flat waves-effect" id="resetPageBackgroundBtn">
+                            <span class="material-symbols-outlined">format_color_reset</span>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </section>
         </aside>
 
         <section class="editor-shell card z-depth-1">
@@ -363,6 +384,76 @@
             }
         ];
 
+        function applyPageBackground() {
+            if (!editorInstance) return;
+            const color = document.getElementById('pageBackgroundColor')?.value;
+            if (!color) return;
+            editorInstance.editing.view.change(writer => {
+                writer.setStyle('background-color', color, editorInstance.editing.view.document.getRoot());
+            });
+            captureSnapshot('Updated page background');
+            showToast('Page background updated.');
+        }
+
+        function previewPageBackground(event) {
+            if (!editorInstance) return;
+            const color = event?.target?.value;
+            if (!color) return;
+            editorInstance.editing.view.change(writer => {
+                writer.setStyle('background-color', color, editorInstance.editing.view.document.getRoot());
+            });
+        }
+
+        function resetPageBackground() {
+            if (!editorInstance) return;
+            editorInstance.editing.view.change(writer => {
+                writer.removeStyle('background-color', editorInstance.editing.view.document.getRoot());
+            });
+            const picker = document.getElementById('pageBackgroundColor');
+            if (picker) picker.value = '#ffffff';
+            captureSnapshot('Reset page background');
+            showToast('Page background reset.');
+        }
+
+        function syncPageBackgroundPicker() {
+            const picker = document.getElementById('pageBackgroundColor');
+            if (!editorInstance || !picker) return;
+            const html = editorInstance.getData();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const bodyStyle = doc.body.getAttribute('style') || '';
+            const match = bodyStyle.match(/background(?:-color)?:\s*([^;]+)/i);
+            if (match) {
+                const normalized = normalizeColorToHex(match[1]);
+                if (normalized) {
+                    picker.value = normalized;
+                    return;
+                }
+            }
+            picker.value = '#ffffff';
+        }
+
+        function normalizeColorToHex(value) {
+            if (!value) return null;
+            const ctx = document.createElement('canvas').getContext('2d');
+            if (!ctx) return null;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = value.trim();
+            const computed = ctx.fillStyle;
+            if (!computed) return null;
+            if (computed.startsWith('#')) {
+                if (computed.length === 4) {
+                    return `#${computed[1].repeat(2)}${computed[2].repeat(2)}${computed[3].repeat(2)}`;
+                }
+                return computed;
+            }
+            const match = computed.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/i);
+            if (!match) return null;
+            const [r, g, b] = match.slice(1).map(Number);
+            const toHex = (num) => num.toString(16).padStart(2, '0');
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const startApp = () => {
                 ensureClassicEditorGlobal();
@@ -539,6 +630,8 @@
                         editorInstance.setData(autosavePayload.content);
                     }
 
+                    syncPageBackgroundPicker();
+
                     updateStats();
                     updateOutline();
                 })
@@ -624,6 +717,15 @@
             document.getElementById('fullScreenToggle').addEventListener('click', toggleFullScreen);
             document.getElementById('clearEditorBtn').addEventListener('click', clearEditorContent);
             document.getElementById('printBtn').addEventListener('click', printDocument);
+            const applyBgBtn = document.getElementById('applyPageBackgroundBtn');
+            const resetBgBtn = document.getElementById('resetPageBackgroundBtn');
+            const bgPicker = document.getElementById('pageBackgroundColor');
+            if (applyBgBtn) applyBgBtn.addEventListener('click', applyPageBackground);
+            if (resetBgBtn) resetBgBtn.addEventListener('click', resetPageBackground);
+            if (bgPicker) bgPicker.addEventListener('input', previewPageBackground);
+            document.querySelectorAll('[data-template]').forEach(btn => {
+                btn.addEventListener('click', () => applyTemplate(btn.dataset.template));
+            });
 
             const mediaDropZone = document.getElementById('mediaDropZone');
             const mediaInput = document.getElementById('mediaUploadInput');
