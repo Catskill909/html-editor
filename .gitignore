@@ -1,0 +1,4 @@
+storage/uploads/
+storage/snapshots/
+storage/logs/
+database/cms.sqlite

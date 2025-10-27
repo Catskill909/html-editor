@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5f3dc4">
+    <title>Page Studio &mdash; Full Featured HTML Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="material-design.css">
+    <script src="vendor/ckeditor/ckeditor.js" defer></script>
+</head>
+
+<body class="theme-light">
+    <header class="app-bar z-depth-1">
+        <div class="app-bar__brand">
+            <span class="material-symbols-outlined">draw</span>
+            <span>Page Studio</span>
+        </div>
+        <div class="app-bar__actions">
+            <label class="theme-switch" for="darkModeToggle">
+                <span class="material-symbols-outlined">light_mode</span>
+                <div class="switch">
+                    <label>
+                        <input type="checkbox" id="darkModeToggle">
+                        <span class="lever"></span>
+                    </label>
+                </div>
+                <span class="material-symbols-outlined">dark_mode</span>
+            </label>
+            <button class="btn-flat waves-effect" id="importBtn">
+                <span class="material-symbols-outlined">upload</span> Import
+            </button>
+            <button class="btn-flat waves-effect" id="copyBtn">
+                <span class="material-symbols-outlined">content_copy</span> Copy HTML
+            </button>
+            <button class="btn-flat waves-effect" id="downloadBtn">
+                <span class="material-symbols-outlined">download</span> Download
+            </button>
+            <button class="btn-flat waves-effect" id="snapshotBtn">
+                <span class="material-symbols-outlined">save</span> Snapshot
+            </button>
+            <button class="btn waves-effect waves-light" id="saveBtn">
+                <span class="material-symbols-outlined">cloud_upload</span> Save to Server
+            </button>
+            <button class="btn secondary waves-effect" id="previewBtn">
+                <span class="material-symbols-outlined">visibility</span> Preview
+            </button>
+        </div>
+    </header>
+
+    <main class="workspace">
+        <aside class="sidebar primary">
+            <section class="card panel">
+                <header class="panel__header">
+                    <span class="material-symbols-outlined">description</span>
+                    <span>Document Details</span>
+                </header>
+                <div class="panel__content">
+                    <div class="input-field">
+                        <input id="titleInput" type="text" placeholder="Untitled Document">
+                        <label for="titleInput" class="active">Title</label>
+                    </div>
+                    <div class="input-field">
+                        <input id="slugInput" type="text" placeholder="landing-page">
+                        <label for="slugInput" class="active">Slug</label>
+                    </div>
+                    <div class="input-field">
+                        <input id="filename" type="text" value="new_page.html">
+                        <label for="filename" class="active">Filename</label>
+                    </div>
+                    <div class="document-meta">
+                        <span class="status-chip" id="autosaveStatus">Draft</span>
+                        <span class="timestamp" id="lastSavedAt">Not saved yet</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card panel">
+                <header class="panel__header">
+                    <span class="material-symbols-outlined">view_in_ar</span>
+                    <span>Templates</span>
+                </header>
+                <div class="panel__content" id="templatesContainer"></div>
+            </section>
+
+            <section class="card panel">
+                <header class="panel__header">
+                    <span class="material-symbols-outlined">widgets</span>
+                    <span>Content Components</span>
+                </header>
+                <div class="panel__content" id="componentsContainer"></div>
+            </section>
+        </aside>
+
+        <section class="editor-shell card z-depth-1">
+            <div class="editor-shell__header">
+                <div class="quick-actions">
+                    <button class="chip-btn" id="fullScreenToggle">
+                        <span class="material-symbols-outlined">fullscreen</span>
+                        Fullscreen
+                    </button>
+                    <button class="chip-btn" id="clearEditorBtn">
+                        <span class="material-symbols-outlined">delete_sweep</span>
+                        Clear
+                    </button>
+                    <button class="chip-btn" id="printBtn">
+                        <span class="material-symbols-outlined">print</span>
+                        Print
+                    </button>
+                    <button class="chip-btn" id="livePreviewBtn">
+                        <span class="material-symbols-outlined">tv</span>
+                        Live Preview
+                    </button>
+                </div>
+                <div class="stats">
+                    <span>Words: <strong id="wordCount">0</strong></span>
+                    <span>Characters: <strong id="characterCount">0</strong></span>
+                    <span>Read time: <strong id="readTime">0 min</strong></span>
+                </div>
+            </div>
+            <div id="editor" class="editor-surface"></div>
+        </section>
+
+        <aside class="sidebar secondary">
+            <section class="card panel">
+                <header class="panel__header">
+                    <span class="material-symbols-outlined">format_list_bulleted</span>
+                    <span>Document Outline</span>
+                </header>
+                <div class="panel__content outline" id="outlineContainer">
+                    <p class="muted">Add headings to generate an outline.</p>
+                </div>
+            </section>
+
+            <section class="card panel">
+                <header class="panel__header">
+                    <span class="material-symbols-outlined">history</span>
+                    <span>Version History</span>
+                </header>
+                <div class="panel__content">
+                    <ul class="version-history" id="historyList"></ul>
+                    <button class="btn-flat waves-effect" id="clearHistoryBtn">
+                        <span class="material-symbols-outlined">delete</span> Clear History
+                    </button>
+                </div>
+            </section>
+
+            <section class="card panel">
+                <header class="panel__header">
+                    <span class="material-symbols-outlined">photo_library</span>
+                    <span>Media Library</span>
+                </header>
+                <div class="panel__content">
+                    <div class="media-dropzone" id="mediaDropZone">
+                        <span class="material-symbols-outlined">file_upload</span>
+                        <p>Drag &amp; drop images or click to upload</p>
+                        <button class="btn-flat waves-effect" id="mediaUploadBtn">Upload</button>
+                    </div>
+                    <div class="media-grid" id="mediaGrid"></div>
+                </div>
+            </section>
+        </aside>
+    </main>
+
+    <div class="live-preview" id="livePreviewModal">
+        <div class="live-preview__content card z-depth-3">
+            <div class="live-preview__header">
+                <h5>Live Preview</h5>
+                <button class="btn-flat waves-effect" id="closePreviewBtn">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <iframe id="previewFrame" title="Live preview" loading="lazy"></iframe>
+        </div>
+    </div>
+
+    <input type="file" id="importHtmlInput" accept=".html,.htm,.txt" hidden>
+    <input type="file" id="mediaUploadInput" accept="image/*" multiple hidden>
+
+    <div class="autosave-indicator" id="autosaveIndicator">
+        <span class="material-symbols-outlined">cloud_sync</span>
+        <span id="autosaveIndicatorText">Saving...</span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        const AUTOSAVE_KEY = 'cmsEditor.autosave';
+        const HISTORY_KEY = 'cmsEditor.history';
+        const THEME_KEY = 'cmsEditor.theme';
+        const MEDIA_LIST_URL = 'media-list.php';
+        const MEDIA_UPLOAD_URL = 'upload-media.php';
+
+        let editorInstance;
+        let autosaveTimer;
+        let autosavePayload = null;
+        let versionHistory = [];
+        let mediaLibrary = [];
+
+        const templates = {
+            landing: `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Landing Page</title>
+</head>
+<body>
+    <header class="hero" style="padding: 80px 24px; text-align: center; background: linear-gradient(135deg, #5f3dc4, #6c5ce7); color: #fff;">
+        <h1>Launch something remarkable</h1>
+        <p>Tell your story with a compelling hero section and clear call to action.</p>
+        <a href="#" style="display: inline-block; padding: 16px 32px; border-radius: 999px; background: #fff; color: #5f3dc4; font-weight: 600; text-decoration: none;">Get Started</a>
+    </header>
+    <section style="padding: 48px 24px; max-width: 960px; margin: 0 auto;">
+        <h2>What makes this special</h2>
+        <p>Use cards, imagery, and storytelling to highlight your product&apos;s strengths.</p>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
+            <article style="padding:24px; border-radius:16px; background:#f8f9ff;">
+                <h3>Insightful analytics</h3>
+                <p>Turn data into opportunity with intuitive dashboards.</p>
+            </article>
+            <article style="padding:24px; border-radius:16px; background:#f8f9ff;">
+                <h3>Lightning fast setup</h3>
+                <p>Deploy in minutes with polished defaults and sensible automation.</p>
+            </article>
+            <article style="padding:24px; border-radius:16px; background:#f8f9ff;">
+                <h3>Human support</h3>
+                <p>Partner with a team that&apos;s invested in your success.</p>
+            </article>
+        </div>
+    </section>
+</body>
+</html>`,
+            article: `<article>
+    <header style="margin-bottom: 32px;">
+        <p style="color:#6c5ce7; font-weight:600;">In-depth guide</p>
+        <h1 style="font-size: 48px; font-weight:700; margin:16px 0;">Crafting rich content that converts</h1>
+        <p style="color:#666; max-width:640px;">Learn how to structure long-form content for clarity, engagement, and accessibility across every device.</p>
+    </header>
+    <figure style="margin:32px 0;">
+        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f" alt="Team collaborating" style="width:100%; border-radius:16px;">
+        <figcaption style="font-size:14px; color:#666; margin-top:12px;">Inclusive collaboration unlocks creative momentum.</figcaption>
+    </figure>
+    <h2>Lead with your thesis</h2>
+    <p>Open with a resonant insight, then validate it through narrative, data, and reader empathy.</p>
+    <blockquote style="border-left:4px solid #6c5ce7; padding-left:24px; font-size:20px; font-weight:500; color:#333;">
+        &ldquo;Clear storytelling turns information into transformation.&rdquo;
+    </blockquote>
+    <h2>Structure for momentum</h2>
+    <p>Alternate between macro perspective and tactical takeaways. Use callouts, numbered steps, and rich media to maintain curiosity.</p>
+</article>`,
+            newsletter: `<div style="max-width:720px; margin:0 auto; padding:48px; background:#ffffff; border-radius:24px; box-shadow:0 20px 45px rgba(95,61,196,0.15);">
+    <header style="text-align:center; margin-bottom:40px;">
+        <p style="text-transform:uppercase; letter-spacing:0.3em; color:#5f3dc4;">Monthly insights</p>
+        <h1 style="font-size:42px; font-weight:700; color:#1a1a1a;">Maker Signals</h1>
+    </header>
+    <section>
+        <h2 style="font-size:28px; margin-bottom:16px;">This month&apos;s spotlight</h2>
+        <p style="line-height:1.8; color:#333;">Showcase your marquee story with strong visuals, layered typography, and a scannable structure.</p>
+    </section>
+    <section style="margin-top:40px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:24px;">
+        <article style="padding:20px; border-radius:18px; background:#f5f1ff;">
+            <h3 style="font-size:20px;">Design systems</h3>
+            <p>Repeatable patterns accelerate innovation without sacrificing taste.</p>
+        </article>
+        <article style="padding:20px; border-radius:18px; background:#f5f1ff;">
+            <h3 style="font-size:20px;">Creator toolkit</h3>
+            <p>Equip your team with components, guidelines, and narrative frameworks.</p>
+        </article>
+    </section>
+</div>`
+        };
+
+        const components = [
+            {
+                id: 'hero-gradient',
+                label: 'Hero Gradient',
+                html: `<section style="padding:80px 24px; text-align:center; background:linear-gradient(135deg,#5f3dc4,#9c6bff); color:#fff; border-radius:32px; margin: 32px auto; max-width: 1024px;">
+    <p style="letter-spacing:0.3em; text-transform:uppercase; font-weight:600;">Announcement</p>
+    <h1 style="font-size:56px; font-weight:700; margin:24px 0;">Design experiences that resonate</h1>
+    <p style="max-width:720px; margin:0 auto 32px; font-size:18px; line-height:1.7;">Lead with clarity, follow with momentum. Pair elevated visual storytelling with purposeful structure.</p>
+    <div style="display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+        <a href="#" style="padding:16px 32px; border-radius:999px; background:#fff; color:#5f3dc4; font-weight:600; text-decoration:none;">Get started</a>
+        <a href="#" style="padding:16px 32px; border-radius:999px; border:2px solid #fff; color:#fff; font-weight:600; text-decoration:none;">View demo</a>
+    </div>
+</section>`
+            },
+            {
+                id: 'callout',
+                label: 'Callout Panel',
+                html: `<aside style="padding:32px; border-radius:24px; background:#f8f5ff; border:1px solid rgba(95,61,196,0.2); margin:32px 0;">
+    <h2 style="margin-top:0; color:#5f3dc4;">Key insight</h2>
+    <p style="font-size:18px; line-height:1.7;">Pair narrative with data to drive confident decisions. Highlight important context with accessible formatting.</p>
+</aside>`
+            },
+            {
+                id: 'testimonial',
+                label: 'Testimonial',
+                html: `<section style="display:flex; gap:24px; align-items:center; background:#ffffff; border-radius:24px; padding:32px; box-shadow:0 20px 50px rgba(95,61,196,0.15); margin:32px 0;">
+    <img src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39" alt="Client portrait" style="width:96px; height:96px; border-radius:50%; object-fit:cover;">
+    <div>
+        <p style="font-size:20px; line-height:1.6;">“This editor elevated our storytelling. The templates and components keep every launch cohesive.”</p>
+        <p style="margin-top:12px; color:#5f3dc4; font-weight:600;">Jordan Forde &mdash; Creative Director</p>
+    </div>
+</section>`
+            },
+            {
+                id: 'two-column',
+                label: 'Two Column Layout',
+                html: `<section style="display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:32px; margin:32px 0; align-items:center;">
+    <div>
+        <h2>Show, then tell</h2>
+        <p>Use visuals to anchor understanding and accompany them with concise, persuasive copy.</p>
+        <ul>
+            <li>Break complex ideas into digestible sections.</li>
+            <li>Use subheadings to guide scanning.</li>
+            <li>Balance data with narrative texture.</li>
+        </ul>
+    </div>
+    <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984" alt="Workspace" style="width:100%; border-radius:24px;">
+</section>`
+            },
+            {
+                id: 'pricing',
+                label: 'Pricing Grid',
+                html: `<section style="margin:48px auto; max-width:1040px;">
+    <h2 style="text-align:center; margin-bottom:32px;">Pricing</h2>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap:24px;">
+        <div style="padding:24px; border-radius:24px; background:#f8f5ff; border:1px solid rgba(95,61,196,0.2);">
+            <h3>Starter</h3>
+            <p style="font-size:32px; font-weight:700;">$19</p>
+            <ul>
+                <li>Core components</li>
+                <li>Basic analytics</li>
+                <li>Email support</li>
+            </ul>
+        </div>
+        <div style="padding:24px; border-radius:24px; background:#ffffff; border:2px solid #5f3dc4; box-shadow:0 20px 40px rgba(95,61,196,0.15);">
+            <h3>Growth</h3>
+            <p style="font-size:32px; font-weight:700;">$49</p>
+            <ul>
+                <li>Everything in Starter</li>
+                <li>Advanced analytics</li>
+                <li>Priority support</li>
+            </ul>
+        </div>
+        <div style="padding:24px; border-radius:24px; background:#f8f5ff; border:1px solid rgba(95,61,196,0.2);">
+            <h3>Enterprise</h3>
+            <p style="font-size:32px; font-weight:700;">Let&apos;s talk</p>
+            <ul>
+                <li>Custom workflows</li>
+                <li>Dedicated partner</li>
+                <li>SLA-backed uptime</li>
+            </ul>
+        </div>
+    </div>
+</section>`
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const startApp = () => {
+                ensureClassicEditorGlobal();
+                M.AutoInit();
+                loadStoredData();
+                initializeTheme();
+                renderTemplates();
+                renderComponents();
+                renderHistory();
+                initializeEditor();
+                fetchMediaLibrary();
+                bindUIEvents();
+            };
+
+            if (document.readyState === 'complete') {
+                startApp();
+            } else {
+                window.addEventListener('load', startApp, { once: true });
+            }
+        });
+
+        function ensureClassicEditorGlobal() {
+            if (!window.ClassicEditor && window.CKEDITOR && window.CKEDITOR.ClassicEditor) {
+                window.ClassicEditor = window.CKEDITOR.ClassicEditor;
+            }
+        }
+
+        function initializeEditor(retryCount = 5) {
+            ensureClassicEditorGlobal();
+            const EditorConstructor = window.ClassicEditor || (window.CKEDITOR && window.CKEDITOR.ClassicEditor);
+
+            if (!EditorConstructor) {
+                if (retryCount > 0) {
+                    setTimeout(() => initializeEditor(retryCount - 1), 200);
+                    return;
+                }
+                console.error('ClassicEditor constructor not found. Ensure CKEditor script is loaded.');
+                showToast('Editor failed to load. Please refresh and try again.', 'error');
+                return;
+            }
+
+            EditorConstructor
+                .create(document.querySelector('#editor'), {
+                    toolbar: {
+                        items: [
+                            'undo', 'redo', '|',
+                            'heading', 'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', '|',
+                            'bold', 'italic', 'underline', 'strikethrough', 'highlight', '|',
+                            'link', 'insertTable', 'blockQuote', 'code', 'codeBlock', 'horizontalLine', '|',
+                            'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent', '|',
+                            'alignment', 'subscript', 'superscript', 'removeFormat', '|',
+                            'imageUpload', 'mediaEmbed', 'insertImage', 'specialCharacters', 'findAndReplace', '|',
+                            'htmlEmbed', 'sourceEditing'
+                        ]
+                    },
+                    list: {
+                        properties: { styles: true, startIndex: true, reversed: true }
+                    },
+                    heading: {
+                        options: [
+                            { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                            { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                            { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                            { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+                            { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
+                            { model: 'heading5', view: 'h5', title: 'Heading 5', class: 'ck-heading_heading5' },
+                            { model: 'heading6', view: 'h6', title: 'Heading 6', class: 'ck-heading_heading6' }
+                        ]
+                    },
+                    fontFamily: {
+                        supportAllValues: true,
+                        options: ['default', '"Playfair Display", serif', '"Poppins", sans-serif', '"Merriweather", serif', '"Source Code Pro", monospace']
+                    },
+                    fontSize: {
+                        options: [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40, 'default'],
+                        supportAllValues: true
+                    },
+                    htmlSupport: {
+                        allow: [
+                            {
+                                name: /.*/,
+                                attributes: true,
+                                classes: true,
+                                styles: true
+                            }
+                        ]
+                    },
+                    htmlEmbed: {
+                        showPreviews: true,
+                        sanitizeHtml: inputHtml => ({
+                            html: inputHtml,
+                            hasChanged: true
+                        })
+                    },
+                    link: {
+                        decorators: {
+                            addTargetToExternalLinks: true,
+                            defaultProtocol: 'https://'
+                        }
+                    },
+                    image: {
+                        toolbar: [
+                            'toggleImageCaption', 'imageTextAlternative', '|',
+                            'imageStyle:inline', 'imageStyle:block', 'imageStyle:side'
+                        ],
+                        styles: ['inline', 'block', 'side']
+                    },
+                    table: {
+                        contentToolbar: [
+                            'tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties'
+                        ]
+                    },
+                    mediaEmbed: {
+                        previewsInData: true
+                    },
+                    typing: {
+                        transformations: {
+                            remove: ['twoHyphens', 'threeDots']
+                        }
+                    },
+                    placeholder: 'Compose something remarkable…',
+                    fontColor: {
+                        columns: 5,
+                        colors: [
+                            { color: '#1f1b2e', label: 'Ink' },
+                            { color: '#5f3dc4', label: 'Indigo' },
+                            { color: '#6c5ce7', label: 'Violet' },
+                            { color: '#0d9488', label: 'Teal' },
+                            { color: '#d97706', label: 'Amber' },
+                            { color: '#ef4444', label: 'Coral' },
+                            { color: '#111827', label: 'Graphite' },
+                            { color: '#4b5563', label: 'Slate' },
+                            { color: '#9ca3af', label: 'Silver' }
+                        ],
+                        documentColors: 0
+                    },
+                    fontBackgroundColor: {
+                        columns: 5,
+                        colors: [
+                            { color: '#ffffff', label: 'Paper' },
+                            { color: '#f5f1ff', label: 'Lavender' },
+                            { color: '#e0f2fe', label: 'Sky' },
+                            { color: '#dcfce7', label: 'Mint' },
+                            { color: '#fef3c7', label: 'Sunrise' },
+                            { color: '#fee2e2', label: 'Rose' },
+                            { color: '#111827', label: 'Graphite' },
+                            { color: '#1f2937', label: 'Ink 2' },
+                            { color: '#4c1d95', label: 'Plum' },
+                            { color: '#0f172a', label: 'Midnight' }
+                        ],
+                        documentColors: 0
+                    },
+                    removePlugins: [
+                        'CKBox', 'CKFinder', 'CKFinderUploadAdapter', 'EasyImage', 'RealTimeCollaborativeComments',
+                        'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory', 'PresenceList',
+                        'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory', 'Pagination', 'WProofreader',
+                        'MathType', 'SlashCommand', 'Template', 'DocumentOutline', 'WordCount', 'ExportPdf', 'ExportWord',
+                        'CloudServices', 'FormatPainter', 'TableOfContents'
+                    ],
+                    licenseKey: ''
+                })
+                .then(editor => {
+                    editorInstance = editor;
+
+                    // Run on data change
+                    editor.model.document.on('change:data', () => {
+                        scheduleAutosave();
+                        updateStats();
+                        updateOutline();
+                        markDirty();
+                    });
+
+                    if (autosavePayload?.content) {
+                        editorInstance.setData(autosavePayload.content);
+                    }
+
+                    updateStats();
+                    updateOutline();
+                })
+                .catch(error => {
+                    console.error(error);
+                    showToast('Failed to initialize the editor', 'error');
+                });
+        }
+
+        function loadStoredData() {
+            try {
+                autosavePayload = JSON.parse(localStorage.getItem(AUTOSAVE_KEY)) || null;
+            } catch (error) {
+                autosavePayload = null;
+            }
+            try {
+                versionHistory = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+            } catch (error) {
+                versionHistory = [];
+            }
+            if (autosavePayload) {
+                document.getElementById('titleInput').value = autosavePayload.title || '';
+                document.getElementById('slugInput').value = autosavePayload.slug || '';
+                document.getElementById('filename').value = autosavePayload.filename || 'new_page.html';
+                setAutosaveStatus('Restored from autosave', autosavePayload.savedAt);
+            }
+        }
+
+        async function fetchMediaLibrary() {
+            const grid = document.getElementById('mediaGrid');
+            grid.innerHTML = '<p class="muted">Loading media…</p>';
+            try {
+                const response = await fetch(MEDIA_LIST_URL, { headers: { Accept: 'application/json' } });
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}`);
+                }
+                const payload = await response.json();
+                if (payload.status !== 'success' || !Array.isArray(payload.media)) {
+                    throw new Error(payload.message || 'Unable to load media library.');
+                }
+                mediaLibrary = payload.media;
+                renderMediaLibrary();
+            } catch (error) {
+                mediaLibrary = [];
+                grid.innerHTML = `<p class="muted">${error.message}</p>`;
+            }
+        }
+
+        function initializeTheme() {
+            const storedTheme = localStorage.getItem(THEME_KEY) || 'light';
+            const isDark = storedTheme === 'dark';
+            document.body.classList.toggle('theme-dark', isDark);
+            document.body.classList.toggle('theme-light', !isDark);
+            const toggle = document.getElementById('darkModeToggle');
+            toggle.checked = isDark;
+        }
+
+        function bindUIEvents() {
+            document.getElementById('darkModeToggle').addEventListener('change', (event) => {
+                const isDark = event.target.checked;
+                document.body.classList.toggle('theme-dark', isDark);
+                document.body.classList.toggle('theme-light', !isDark);
+                localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+            });
+
+            document.getElementById('titleInput').addEventListener('input', scheduleAutosave);
+            document.getElementById('slugInput').addEventListener('input', scheduleAutosave);
+            document.getElementById('filename').addEventListener('input', scheduleAutosave);
+
+            document.getElementById('importBtn').addEventListener('click', () => {
+                document.getElementById('importHtmlInput').click();
+            });
+
+            document.getElementById('importHtmlInput').addEventListener('change', handleImportHtml);
+            document.getElementById('downloadBtn').addEventListener('click', downloadDocument);
+            document.getElementById('copyBtn').addEventListener('click', copyHtmlToClipboard);
+            document.getElementById('saveBtn').addEventListener('click', saveToServer);
+            document.getElementById('previewBtn').addEventListener('click', openServerPreview);
+            document.getElementById('snapshotBtn').addEventListener('click', () => captureSnapshot('Manual snapshot'));
+            document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+            document.getElementById('livePreviewBtn').addEventListener('click', openLivePreview);
+            document.getElementById('closePreviewBtn').addEventListener('click', closeLivePreview);
+            document.getElementById('fullScreenToggle').addEventListener('click', toggleFullScreen);
+            document.getElementById('clearEditorBtn').addEventListener('click', clearEditorContent);
+            document.getElementById('printBtn').addEventListener('click', printDocument);
+
+            const mediaDropZone = document.getElementById('mediaDropZone');
+            const mediaInput = document.getElementById('mediaUploadInput');
+            mediaDropZone.addEventListener('click', () => mediaInput.click());
+            mediaDropZone.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                mediaDropZone.classList.add('dragover');
+            });
+            mediaDropZone.addEventListener('dragleave', () => mediaDropZone.classList.remove('dragover'));
+            mediaDropZone.addEventListener('drop', (event) => {
+                event.preventDefault();
+                mediaDropZone.classList.remove('dragover');
+                handleMediaFiles(event.dataTransfer.files);
+            });
+            mediaInput.addEventListener('change', (event) => handleMediaFiles(event.target.files));
+            document.getElementById('mediaUploadBtn').addEventListener('click', () => mediaInput.click());
+        }
+
+        function renderTemplates() {
+            const container = document.getElementById('templatesContainer');
+            container.innerHTML = '';
+            Object.entries(templates).forEach(([key, html]) => {
+                const button = document.createElement('button');
+                button.className = 'chip-btn full-width';
+                button.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+                button.addEventListener('click', () => applyTemplate(key));
+                container.appendChild(button);
+            });
+        }
+
+        function renderComponents() {
+            const container = document.getElementById('componentsContainer');
+            container.innerHTML = '';
+            components.forEach(component => {
+                const button = document.createElement('button');
+                button.className = 'chip-btn full-width';
+                button.textContent = component.label;
+                button.addEventListener('click', () => insertComponent(component.html));
+                container.appendChild(button);
+            });
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            if (!versionHistory.length) {
+                const empty = document.createElement('li');
+                empty.className = 'muted';
+                empty.textContent = 'No snapshots yet.';
+                list.appendChild(empty);
+                return;
+            }
+            versionHistory.slice().reverse().forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div>
+                        <strong>${entry.label}</strong>
+                        <p class="muted small">${new Date(entry.savedAt).toLocaleString()}</p>
+                    </div>
+                    <div class="history-actions">
+                        <button class="btn-flat waves-effect" data-action="restore">Restore</button>
+                    </div>
+                `;
+                li.querySelector('[data-action="restore"]').addEventListener('click', () => restoreSnapshot(versionHistory.length - 1 - index));
+                list.appendChild(li);
+            });
+        }
+
+        function renderMediaLibrary() {
+            const grid = document.getElementById('mediaGrid');
+            grid.innerHTML = '';
+            if (!mediaLibrary.length) {
+                const empty = document.createElement('p');
+                empty.className = 'muted';
+                empty.textContent = 'No media uploaded yet.';
+                grid.appendChild(empty);
+                return;
+            }
+            mediaLibrary
+                .slice()
+                .sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0))
+                .forEach((item) => {
+                    const card = document.createElement('div');
+                    card.className = 'media-card';
+                    card.innerHTML = `
+                        <figure>
+                            <img src="${item.url}" alt="${item.name}">
+                            <figcaption>
+                                <strong>${item.name}</strong>
+                                <span class="muted small">${formatFileSize(item.size || 0)} · ${formatTimestamp(item.uploadedAt)}</span>
+                            </figcaption>
+                        </figure>
+                        <div class="media-card__actions">
+                            <button class="btn-flat waves-effect" data-action="insert">Insert</button>
+                            <button class="btn-flat waves-effect" data-action="open">Open</button>
+                        </div>
+                    `;
+                    card.querySelector('[data-action="insert"]').addEventListener('click', () => insertImage(item.url, item.name));
+                    card.querySelector('[data-action="open"]').addEventListener('click', () => window.open(item.url, '_blank'));
+                    grid.appendChild(card);
+                });
+        }
+
+        function handleImportHtml(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (editorInstance) {
+                    editorInstance.setData(reader.result);
+                    showToast(`Imported ${file.name}`);
+                    captureSnapshot('Imported HTML');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function handleMediaFiles(fileList) {
+            const files = Array.from(fileList);
+            if (!files.length) return;
+            uploadMediaFiles(files);
+        }
+
+        async function uploadMediaFiles(files) {
+            for (const file of files) {
+                if (!file.type.startsWith('image/')) {
+                    showToast(`${file.name} is not an image.`, 'warning');
+                    continue;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast(`${file.name} exceeds 5MB limit.`, 'warning');
+                    continue;
+                }
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                    const response = await fetch(MEDIA_UPLOAD_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Upload failed with status ${response.status}`);
+                    }
+                    const payload = await response.json();
+                    if (payload.status !== 'success' || !payload.media) {
+                        throw new Error(payload.message || 'Upload failed.');
+                    }
+                    mediaLibrary = mediaLibrary.filter(item => item.filename !== payload.media.filename).concat(payload.media);
+                    renderMediaLibrary();
+                    showToast(`${file.name} uploaded.`);
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+            }
+        }
+
+        function applyTemplate(key) {
+            if (!editorInstance) return;
+            const html = templates[key];
+            if (!html) return;
+            const currentContent = editorInstance.getData().trim();
+            if (currentContent && !confirm('Replace the current content with this template?')) {
+                return;
+            }
+            editorInstance.setData(html);
+            captureSnapshot(`Applied ${key} template`);
+            showToast(`${key.charAt(0).toUpperCase() + key.slice(1)} template loaded.`);
+        }
+
+        function insertComponent(html) {
+            if (!editorInstance) return;
+            editorInstance.model.change(writer => {
+                const viewFragment = editorInstance.data.processor.toView(html);
+                const modelFragment = editorInstance.data.toModel(viewFragment);
+                editorInstance.model.insertContent(modelFragment);
+            });
+            captureSnapshot('Inserted component');
+            showToast('Component inserted.');
+        }
+
+        function insertImage(dataUrl, altText) {
+            if (!editorInstance) return;
+            editorInstance.execute('insertImage', { source: [{ src: dataUrl, alt: altText }] });
+            showToast('Image inserted.');
+        }
+
+        function updateStats() {
+            if (!editorInstance) return;
+            const parser = new DOMParser();
+            const html = editorInstance.getData();
+            const doc = parser.parseFromString(html, 'text/html');
+            const text = doc.body.textContent || '';
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const characters = text.replace(/\s/g, '').length;
+            const readTime = Math.max(1, Math.round(words / 200)) || 0;
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('characterCount').textContent = characters;
+            document.getElementById('readTime').textContent = words ? `${readTime} min` : '0 min';
+        }
+
+        function updateOutline() {
+            if (!editorInstance) return;
+            const parser = new DOMParser();
+            const html = editorInstance.getData();
+            const doc = parser.parseFromString(html, 'text/html');
+            const headings = doc.body.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            const container = document.getElementById('outlineContainer');
+            container.innerHTML = '';
+            if (!headings.length) {
+                container.innerHTML = '<p class="muted">Add headings to generate an outline.</p>';
+                return;
+            }
+            const list = document.createElement('ol');
+            list.className = 'outline-list';
+            headings.forEach((heading, index) => {
+                const level = parseInt(heading.tagName.replace('H', ''), 10);
+                const li = document.createElement('li');
+                li.style.setProperty('--level', level);
+                li.textContent = `${index + 1}. ${heading.textContent.trim()}`;
+                list.appendChild(li);
+            });
+            container.appendChild(list);
+        }
+
+        function scheduleAutosave() {
+            clearTimeout(autosaveTimer);
+            autosaveTimer = setTimeout(() => {
+                persistAutosave();
+                setAutosaveStatus('Draft saved locally', new Date().toISOString());
+            }, 1200);
+        }
+
+        function persistAutosave() {
+            if (!editorInstance) return;
+            const payload = {
+                content: editorInstance.getData(),
+                title: document.getElementById('titleInput').value,
+                slug: document.getElementById('slugInput').value,
+                filename: document.getElementById('filename').value,
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(payload));
+            autosavePayload = payload;
+        }
+
+        function captureSnapshot(label) {
+            if (!editorInstance) return;
+            const entry = {
+                label,
+                content: editorInstance.getData(),
+                title: document.getElementById('titleInput').value,
+                slug: document.getElementById('slugInput').value,
+                filename: document.getElementById('filename').value,
+                savedAt: new Date().toISOString()
+            };
+            versionHistory.push(entry);
+            if (versionHistory.length > 20) {
+                versionHistory = versionHistory.slice(-20);
+            }
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(versionHistory));
+            renderHistory();
+        }
+
+        function restoreSnapshot(index) {
+            const snapshot = versionHistory[index];
+            if (!snapshot || !editorInstance) return;
+            editorInstance.setData(snapshot.content);
+            document.getElementById('titleInput').value = snapshot.title;
+            document.getElementById('slugInput').value = snapshot.slug;
+            document.getElementById('filename').value = snapshot.filename;
+            persistAutosave();
+            updateStats();
+            updateOutline();
+            showToast('Snapshot restored.');
+        }
+
+        function clearHistory() {
+            if (!versionHistory.length) return;
+            if (!confirm('Clear all saved snapshots?')) return;
+            versionHistory = [];
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(versionHistory));
+            renderHistory();
+        }
+
+        function setAutosaveStatus(message, timestamp) {
+            const status = document.getElementById('autosaveStatus');
+            const savedAt = document.getElementById('lastSavedAt');
+            status.textContent = message;
+            savedAt.textContent = timestamp ? `Last updated ${new Date(timestamp).toLocaleTimeString()}` : 'Not saved yet';
+            
+            // Update floating indicator
+            const indicator = document.getElementById('autosaveIndicator');
+            const indicatorText = document.getElementById('autosaveIndicatorText');
+            
+            if (message.toLowerCase().includes('saving')) {
+                indicator.className = 'autosave-indicator visible saving';
+                indicatorText.textContent = 'Saving...';
+            } else if (message.toLowerCase().includes('saved')) {
+                indicator.className = 'autosave-indicator visible saved';
+                indicatorText.textContent = 'Saved';
+                setTimeout(() => {
+                    indicator.classList.remove('visible');
+                }, 2000);
+            } else if (message.toLowerCase().includes('error') || message.toLowerCase().includes('failed')) {
+                indicator.className = 'autosave-indicator visible error';
+                indicatorText.textContent = 'Save failed';
+                setTimeout(() => {
+                    indicator.classList.remove('visible');
+                }, 3000);
+            }
+        }
+
+        function markDirty() {
+            document.getElementById('autosaveStatus').textContent = 'Unsaved changes';
+            const indicator = document.getElementById('autosaveIndicator');
+            indicator.classList.remove('visible');
+        }
+
+        function saveToServer() {
+            if (!editorInstance) return;
+            const filename = document.getElementById('filename').value.trim() || 'new_page.html';
+            const title = document.getElementById('titleInput').value.trim() || 'Untitled Page';
+            const slug = document.getElementById('slugInput').value.trim();
+            const htmlContent = editorInstance.getData();
+
+            const body = new URLSearchParams({
+                filename,
+                title,
+                slug,
+                htmlContent,
+                content: htmlContent
+            });
+
+            setAutosaveStatus('Saving to server…');
+
+            fetch('save-html.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body
+            })
+                .then(async response => {
+                    const contentType = response.headers.get('content-type') || '';
+                    let payload;
+                    if (contentType.includes('application/json')) {
+                        payload = await response.json();
+                    } else {
+                        const text = await response.text();
+                        payload = { status: response.ok ? 'success' : 'error', message: text };
+                    }
+
+                    if (!response.ok || payload.status === 'error') {
+                        throw new Error(payload.message || 'Server rejected the save request.');
+                    }
+
+                    if (payload.status === 'partial') {
+                        showToast(payload.message || 'Saved with warnings.', 'warning');
+                    } else {
+                        showToast(payload.message || 'Saved to server.', 'success');
+                    }
+
+                    if (Array.isArray(payload.warnings)) {
+                        payload.warnings.filter(Boolean).forEach(warning => showToast(warning, 'warning'));
+                    }
+
+                    captureSnapshot('Server save');
+                    setAutosaveStatus(payload.status === 'partial' ? 'Saved with warnings' : 'Saved to server', new Date().toISOString());
+                })
+                .catch(error => {
+                    console.error(error);
+                    showToast('Failed to save to server.', 'error');
+                    setAutosaveStatus('Server save failed');
+                });
+        }
+
+        function openServerPreview() {
+            const filename = document.getElementById('filename').value.trim() || 'new_page.html';
+            window.open('preview.php?file=' + encodeURIComponent(filename), '_blank');
+        }
+
+        function openLivePreview() {
+            if (!editorInstance) return;
+            const modal = document.getElementById('livePreviewModal');
+            const frame = document.getElementById('previewFrame');
+            const html = editorInstance.getData();
+            frame.srcdoc = html;
+            modal.classList.add('visible');
+        }
+
+        function closeLivePreview() {
+            document.getElementById('livePreviewModal').classList.remove('visible');
+        }
+
+        function toggleFullScreen() {
+            document.querySelector('.editor-shell').classList.toggle('fullscreen');
+        }
+
+        function clearEditorContent() {
+            if (!editorInstance) return;
+            if (!confirm('Clear the editor content?')) return;
+            editorInstance.setData('');
+            updateStats();
+            updateOutline();
+        }
+
+        function downloadDocument() {
+            if (!editorInstance) return;
+            const title = document.getElementById('titleInput').value.trim() || 'document';
+            const html = editorInstance.getData();
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${title.replace(/[^a-z0-9-_]/gi, '-').toLowerCase() || 'document'}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Download started.');
+        }
+
+        function copyHtmlToClipboard() {
+            if (!editorInstance) return;
+            const html = editorInstance.getData();
+            navigator.clipboard.writeText(html)
+                .then(() => showToast('HTML copied to clipboard.'))
+                .catch(() => showToast('Clipboard copy failed.', 'error'));
+        }
+
+        function printDocument() {
+            if (!editorInstance) return;
+            const html = editorInstance.getData();
+            const popup = window.open('', '_blank', 'width=1024,height=768');
+            popup.document.write(html);
+            popup.document.close();
+            popup.focus();
+            popup.print();
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes || Number.isNaN(bytes)) {
+                return '0 KB';
+            }
+            const units = ['bytes', 'KB', 'MB', 'GB'];
+            let value = bytes;
+            let unitIndex = 0;
+            while (value >= 1024 && unitIndex < units.length - 1) {
+                value /= 1024;
+                unitIndex += 1;
+            }
+            if (unitIndex === 0) {
+                return `${value} ${units[unitIndex]}`;
+            }
+            return `${value.toFixed(1)} ${units[unitIndex]}`;
+        }
+
+        function formatTimestamp(value) {
+            if (!value) return '';
+            try {
+                return new Date(value).toLocaleString();
+            } catch (error) {
+                return '';
+            }
+        }
+
+        function showToast(message, style = '') {
+            if (window.M && M.toast) {
+                M.toast({ html: message, classes: style });
+            } else {
+                alert(message);
+            }
+        }
+    </script>
+</body>
+
+</html>
