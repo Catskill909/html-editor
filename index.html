@@ -104,7 +104,13 @@
                 </header>
                 <div class="panel__content page-style-controls">
                     <label for="pageBackgroundColor" class="muted small">Page background</label>
-                    <input type="color" id="pageBackgroundColor" value="#ffffff">
+                    <div class="material-color-control">
+                        <input type="color" id="pageBackgroundColor" class="material-color-control__input" value="#ffffff" aria-describedby="pageBackgroundColorValue">
+                        <div class="material-color-control__details">
+                            <span class="material-color-control__value" id="pageBackgroundColorValue">#FFFFFF</span>
+                            <span class="material-color-control__hint">Click the swatch to adjust</span>
+                        </div>
+                    </div>
                     <div class="style-actions">
                         <button class="btn-flat waves-effect" id="applyPageBackgroundBtn">
                             <span class="material-symbols-outlined">check</span>
@@ -385,9 +391,10 @@
         ];
 
         function applyPageBackground() {
-            if (!editorInstance) return;
             const color = document.getElementById('pageBackgroundColor')?.value;
             if (!color) return;
+            updatePageBackgroundPreview(color);
+            if (!editorInstance) return;
             editorInstance.editing.view.change(writer => {
                 writer.setStyle('background-color', color, editorInstance.editing.view.document.getRoot());
             });
@@ -396,21 +403,25 @@
         }
 
         function previewPageBackground(event) {
-            if (!editorInstance) return;
             const color = event?.target?.value;
             if (!color) return;
+            updatePageBackgroundPreview(color);
+            if (!editorInstance) return;
             editorInstance.editing.view.change(writer => {
                 writer.setStyle('background-color', color, editorInstance.editing.view.document.getRoot());
             });
         }
 
         function resetPageBackground() {
+            const picker = document.getElementById('pageBackgroundColor');
+            if (picker) {
+                picker.value = '#ffffff';
+                updatePageBackgroundPreview('#ffffff');
+            }
             if (!editorInstance) return;
             editorInstance.editing.view.change(writer => {
                 writer.removeStyle('background-color', editorInstance.editing.view.document.getRoot());
             });
-            const picker = document.getElementById('pageBackgroundColor');
-            if (picker) picker.value = '#ffffff';
             captureSnapshot('Reset page background');
             showToast('Page background reset.');
         }
@@ -427,10 +438,12 @@
                 const normalized = normalizeColorToHex(match[1]);
                 if (normalized) {
                     picker.value = normalized;
+                    updatePageBackgroundPreview(normalized);
                     return;
                 }
             }
             picker.value = '#ffffff';
+            updatePageBackgroundPreview('#ffffff');
         }
 
         function normalizeColorToHex(value) {
@@ -452,6 +465,20 @@
             const [r, g, b] = match.slice(1).map(Number);
             const toHex = (num) => num.toString(16).padStart(2, '0');
             return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
+        function updatePageBackgroundPreview(color) {
+            if (!color) return;
+            const normalized = color.toUpperCase();
+            const display = document.getElementById('pageBackgroundColorValue');
+            if (display) {
+                display.textContent = normalized;
+            }
+            const picker = document.getElementById('pageBackgroundColor');
+            const container = picker?.closest('.material-color-control');
+            if (container) {
+                container.style.setProperty('--selected-color', color);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -576,35 +603,130 @@
                     },
                     placeholder: 'Compose something remarkable…',
                     fontColor: {
-                        columns: 5,
+                        columns: 6,
                         colors: [
-                            { color: '#1f1b2e', label: 'Ink' },
+                            // Primary Brand Colors
                             { color: '#5f3dc4', label: 'Indigo' },
                             { color: '#6c5ce7', label: 'Violet' },
-                            { color: '#0d9488', label: 'Teal' },
-                            { color: '#d97706', label: 'Amber' },
+                            { color: '#8c7bff', label: 'Lavender' },
+                            { color: '#a78bfa', label: 'Purple Light' },
+                            { color: '#c4b5fd', label: 'Purple Soft' },
+                            { color: '#ddd6fe', label: 'Purple Pale' },
+                            
+                            // Reds & Pinks
+                            { color: '#dc2626', label: 'Red' },
                             { color: '#ef4444', label: 'Coral' },
+                            { color: '#f87171', label: 'Red Light' },
+                            { color: '#ec4899', label: 'Pink' },
+                            { color: '#f472b6', label: 'Pink Light' },
+                            { color: '#fda4af', label: 'Rose' },
+                            
+                            // Oranges & Yellows
+                            { color: '#ea580c', label: 'Orange' },
+                            { color: '#f97316', label: 'Orange Bright' },
+                            { color: '#fb923c', label: 'Orange Light' },
+                            { color: '#d97706', label: 'Amber' },
+                            { color: '#f59e0b', label: 'Amber Bright' },
+                            { color: '#fbbf24', label: 'Yellow' },
+                            
+                            // Greens
+                            { color: '#059669', label: 'Emerald' },
+                            { color: '#10b981', label: 'Green' },
+                            { color: '#34d399', label: 'Green Light' },
+                            { color: '#0d9488', label: 'Teal' },
+                            { color: '#14b8a6', label: 'Teal Bright' },
+                            { color: '#2dd4bf', label: 'Teal Light' },
+                            
+                            // Blues & Cyans
+                            { color: '#0284c7', label: 'Sky' },
+                            { color: '#0ea5e9', label: 'Sky Bright' },
+                            { color: '#38bdf8', label: 'Sky Light' },
+                            { color: '#2563eb', label: 'Blue' },
+                            { color: '#3b82f6', label: 'Blue Bright' },
+                            { color: '#60a5fa', label: 'Blue Light' },
+                            
+                            // Neutrals
+                            { color: '#1f1b2e', label: 'Ink' },
                             { color: '#111827', label: 'Graphite' },
+                            { color: '#1f2937', label: 'Gray 800' },
+                            { color: '#374151', label: 'Gray 700' },
                             { color: '#4b5563', label: 'Slate' },
-                            { color: '#9ca3af', label: 'Silver' }
+                            { color: '#6b7280', label: 'Gray 500' },
+                            { color: '#9ca3af', label: 'Silver' },
+                            { color: '#d1d5db', label: 'Gray 300' },
+                            { color: '#e5e7eb', label: 'Gray 200' },
+                            { color: '#f3f4f6', label: 'Gray 100' },
+                            { color: '#f9fafb', label: 'Gray 50' },
+                            { color: '#ffffff', label: 'White' }
                         ],
-                        documentColors: 0
+                        documentColors: 10,
+                        colorPicker: {
+                            format: 'hex'
+                        }
                     },
                     fontBackgroundColor: {
-                        columns: 5,
+                        columns: 6,
                         colors: [
-                            { color: '#ffffff', label: 'Paper' },
+                            // Light Backgrounds
+                            { color: '#ffffff', label: 'White' },
+                            { color: '#f9fafb', label: 'Gray 50' },
+                            { color: '#f3f4f6', label: 'Gray 100' },
+                            { color: '#e5e7eb', label: 'Gray 200' },
+                            { color: '#d1d5db', label: 'Gray 300' },
                             { color: '#f5f1ff', label: 'Lavender' },
-                            { color: '#e0f2fe', label: 'Sky' },
+                            
+                            // Purple Tints
+                            { color: '#faf5ff', label: 'Purple 50' },
+                            { color: '#f3e8ff', label: 'Purple 100' },
+                            { color: '#e9d5ff', label: 'Purple 200' },
+                            { color: '#ddd6fe', label: 'Purple 300' },
+                            { color: '#c4b5fd', label: 'Purple 400' },
+                            { color: '#a78bfa', label: 'Purple 500' },
+                            
+                            // Blue Tints
+                            { color: '#eff6ff', label: 'Blue 50' },
+                            { color: '#dbeafe', label: 'Blue 100' },
+                            { color: '#bfdbfe', label: 'Blue 200' },
+                            { color: '#e0f2fe', label: 'Sky 100' },
+                            { color: '#bae6fd', label: 'Sky 200' },
+                            { color: '#7dd3fc', label: 'Sky 300' },
+                            
+                            // Green Tints
+                            { color: '#f0fdf4', label: 'Green 50' },
                             { color: '#dcfce7', label: 'Mint' },
+                            { color: '#bbf7d0', label: 'Green 200' },
+                            { color: '#ccfbf1', label: 'Teal 100' },
+                            { color: '#99f6e4', label: 'Teal 200' },
+                            { color: '#5eead4', label: 'Teal 300' },
+                            
+                            // Yellow & Orange Tints
+                            { color: '#fffbeb', label: 'Amber 50' },
                             { color: '#fef3c7', label: 'Sunrise' },
+                            { color: '#fde68a', label: 'Amber 200' },
+                            { color: '#fff7ed', label: 'Orange 50' },
+                            { color: '#ffedd5', label: 'Orange 100' },
+                            { color: '#fed7aa', label: 'Orange 200' },
+                            
+                            // Red & Pink Tints
+                            { color: '#fef2f2', label: 'Red 50' },
                             { color: '#fee2e2', label: 'Rose' },
+                            { color: '#fecaca', label: 'Red 200' },
+                            { color: '#fdf2f8', label: 'Pink 50' },
+                            { color: '#fce7f3', label: 'Pink 100' },
+                            { color: '#fbcfe8', label: 'Pink 200' },
+                            
+                            // Dark Backgrounds
+                            { color: '#0f172a', label: 'Midnight' },
+                            { color: '#1e293b', label: 'Slate 800' },
+                            { color: '#334155', label: 'Slate 700' },
                             { color: '#111827', label: 'Graphite' },
-                            { color: '#1f2937', label: 'Ink 2' },
-                            { color: '#4c1d95', label: 'Plum' },
-                            { color: '#0f172a', label: 'Midnight' }
+                            { color: '#1f2937', label: 'Gray 800' },
+                            { color: '#4c1d95', label: 'Plum' }
                         ],
-                        documentColors: 0
+                        documentColors: 10,
+                        colorPicker: {
+                            format: 'hex'
+                        }
                     },
                     removePlugins: [
                         'CKBox', 'CKFinder', 'CKFinderUploadAdapter', 'EasyImage', 'RealTimeCollaborativeComments',
@@ -634,11 +756,125 @@
 
                     updateStats();
                     updateOutline();
+                    
+                    // CRITICAL FIX: Override CKEditor's inline styles for color picker
+                    initColorPickerSizeOverride();
                 })
                 .catch(error => {
                     console.error(error);
                     showToast('Failed to initialize the editor', 'error');
                 });
+        }
+
+        function initColorPickerSizeOverride() {
+            // This function watches for CKEditor color picker creation and forcefully overrides inline styles
+            const observer = new MutationObserver((mutations) => {
+                const picker = document.querySelector('.ck-color-picker');
+                if (picker && !picker.dataset.sizeOverridden) {
+                    picker.dataset.sizeOverridden = 'true';
+                    
+                    // Force override the picker container with beautiful styling
+                    picker.style.setProperty('width', '420px', 'important');
+                    picker.style.setProperty('min-width', '420px', 'important');
+                    picker.style.setProperty('padding', '28px', 'important');
+                    picker.style.setProperty('background', '#ffffff', 'important');
+                    picker.style.setProperty('border-radius', '20px', 'important');
+                    
+                    // Override the color gradient vector
+                    const vector = picker.querySelector('.ck-color-picker__vector');
+                    if (vector) {
+                        vector.style.setProperty('width', '100%', 'important');
+                        vector.style.setProperty('height', '320px', 'important');
+                        vector.style.setProperty('min-height', '320px', 'important');
+                        vector.style.setProperty('border-radius', '16px', 'important');
+                        vector.style.setProperty('box-shadow', '0 4px 16px rgba(15, 23, 42, 0.1)', 'important');
+                        vector.style.setProperty('overflow', 'hidden', 'important');
+                    }
+                    
+                    // Override the sliders
+                    const sliders = picker.querySelectorAll('.ck-color-picker__slider');
+                    sliders.forEach(slider => {
+                        slider.style.setProperty('height', '32px', 'important');
+                        slider.style.setProperty('min-height', '32px', 'important');
+                        slider.style.setProperty('width', '100%', 'important');
+                        slider.style.setProperty('border-radius', '10px', 'important');
+                        slider.style.setProperty('box-shadow', '0 2px 8px rgba(15, 23, 42, 0.08)', 'important');
+                        slider.style.setProperty('overflow', 'hidden', 'important');
+                    });
+                    
+                    // Override the preview
+                    const preview = picker.querySelector('.ck-color-picker__preview');
+                    if (preview) {
+                        preview.style.setProperty('height', '64px', 'important');
+                        preview.style.setProperty('min-height', '64px', 'important');
+                        preview.style.setProperty('width', '100%', 'important');
+                        preview.style.setProperty('border-radius', '16px', 'important');
+                        preview.style.setProperty('box-shadow', 'inset 0 0 0 1px rgba(15, 23, 42, 0.16), 0 8px 20px rgba(15, 23, 42, 0.12)', 'important');
+                    }
+                    
+                    // Override the input field
+                    const input = picker.querySelector('.ck-color-picker__input');
+                    if (input) {
+                        input.style.setProperty('padding', '16px 20px', 'important');
+                        input.style.setProperty('font-size', '1.1rem', 'important');
+                        input.style.setProperty('width', '100%', 'important');
+                        input.style.setProperty('border-radius', '14px', 'important');
+                        input.style.setProperty('border', '2px solid rgba(95, 61, 196, 0.2)', 'important');
+                        input.style.setProperty('background', '#ffffff', 'important');
+                        input.style.setProperty('text-align', 'center', 'important');
+                        input.style.setProperty('font-weight', '600', 'important');
+                        input.style.setProperty('letter-spacing', '0.05em', 'important');
+                    }
+                    
+                    // Override buttons
+                    const buttons = picker.querySelectorAll('.ck-button');
+                    buttons.forEach(button => {
+                        button.style.setProperty('min-height', '52px', 'important');
+                        button.style.setProperty('height', '52px', 'important');
+                        button.style.setProperty('padding', '14px 32px', 'important');
+                        button.style.setProperty('font-size', '1rem', 'important');
+                        button.style.setProperty('border-radius', '14px', 'important');
+                        button.style.setProperty('font-weight', '600', 'important');
+                        button.style.setProperty('cursor', 'pointer', 'important');
+                        
+                        // Style save button
+                        if (button.classList.contains('ck-button-save')) {
+                            button.style.setProperty('background', 'linear-gradient(135deg, #5f3dc4 0%, #7c5ce7 100%)', 'important');
+                            button.style.setProperty('color', '#ffffff', 'important');
+                            button.style.setProperty('border', 'none', 'important');
+                            button.style.setProperty('box-shadow', '0 12px 28px rgba(95, 61, 196, 0.28)', 'important');
+                        }
+                        
+                        // Style cancel button
+                        if (button.classList.contains('ck-button-cancel')) {
+                            button.style.setProperty('color', '#ef4444', 'important');
+                            button.style.setProperty('border', '2px solid rgba(239, 68, 68, 0.2)', 'important');
+                            button.style.setProperty('background', 'rgba(239, 68, 68, 0.04)', 'important');
+                        }
+                    });
+                    
+                    // Style the label
+                    const label = picker.querySelector('.ck-labeled-field-view__label');
+                    if (label) {
+                        label.style.setProperty('font-size', '0.85rem', 'important');
+                        label.style.setProperty('font-weight', '600', 'important');
+                        label.style.setProperty('text-transform', 'uppercase', 'important');
+                        label.style.setProperty('letter-spacing', '0.1em', 'important');
+                        label.style.setProperty('color', '#8d85a6', 'important');
+                        label.style.setProperty('margin-bottom', '8px', 'important');
+                    }
+                    
+                    console.log('✅ Color picker size and styling override applied successfully!');
+                }
+            });
+            
+            // Watch for color picker creation
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            console.log('🔍 Color picker size override watcher initialized');
         }
 
         function loadStoredData() {
@@ -722,7 +958,10 @@
             const bgPicker = document.getElementById('pageBackgroundColor');
             if (applyBgBtn) applyBgBtn.addEventListener('click', applyPageBackground);
             if (resetBgBtn) resetBgBtn.addEventListener('click', resetPageBackground);
-            if (bgPicker) bgPicker.addEventListener('input', previewPageBackground);
+            if (bgPicker) {
+                bgPicker.addEventListener('input', previewPageBackground);
+                updatePageBackgroundPreview(bgPicker.value || '#ffffff');
+            }
             document.querySelectorAll('[data-template]').forEach(btn => {
                 btn.addEventListener('click', () => applyTemplate(btn.dataset.template));
             });
@@ -1199,6 +1438,53 @@
             }
         }
     </script>
+    
+    <!-- Force CKEditor color picker styles to override built-in styles -->
+    <style>
+        /* Critical overrides for CKEditor color picker - must be inline to load last */
+        .ck.ck-balloon-panel .ck-color-picker {
+            padding: 28px !important;
+            gap: 20px !important;
+            min-width: 420px !important;
+            width: 420px !important;
+        }
+        
+        .ck.ck-color-picker .ck-color-picker__vector {
+            min-height: 320px !important;
+            height: 320px !important;
+            width: 100% !important;
+        }
+        
+        .ck.ck-color-picker .ck-color-picker__slider {
+            min-height: 32px !important;
+            height: 32px !important;
+            width: 100% !important;
+        }
+        
+        .ck.ck-color-picker .ck-color-picker__preview {
+            min-height: 64px !important;
+            height: 64px !important;
+            width: 100% !important;
+        }
+        
+        .ck.ck-color-picker .ck-color-picker__input {
+            padding: 16px 20px !important;
+            font-size: 1.1rem !important;
+            width: 100% !important;
+        }
+        
+        .ck.ck-color-picker .ck-button {
+            min-height: 52px !important;
+            height: 52px !important;
+            padding: 14px 32px !important;
+            font-size: 1rem !important;
+        }
+        
+        .ck.ck-color-picker .ck-labeled-field-view,
+        .ck.ck-color-picker .ck-labeled-field-view__input-wrapper {
+            width: 100% !important;
+        }
+    </style>
 </body>
 
 </html>
